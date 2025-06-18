@@ -1,54 +1,82 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Minus, Plus } from "lucide-react";
 import React from "react";
+
+type TimerState = "idle" | "running" | "paused" | "finished";
 
 export default function Testing2() {
 	const initialTime = 15;
 
 	const [time, setTime] = React.useState(initialTime);
-	const [isTimeRunning, setisTimeRunning] = React.useState(false);
-	const [isSessionStarted, setIsSessionStarted] = React.useState(false);
+	const [timerState, setTimerState] = React.useState<TimerState>("idle");
 
-	const intervalRef = React.useRef<any>(undefined);
+	const intervalRef = React.useRef<number | null>(null);
 
+	// Separate effect for interval management
 	React.useEffect(() => {
-		if (time > 0 && isTimeRunning) {
+		if (timerState === "running" && time > 0) {
 			intervalRef.current = setInterval(() => {
-				setTime((prev) => prev - 1);
+				setTime((prev) => {
+					if (prev <= 1) {
+						setTimerState("finished");
+						return 0;
+					}
+					return prev - 1;
+				});
 			}, 1000);
-		} else if (time === 0 && isTimeRunning) {
-			alert("Time is up!");
+		} else {
+			// Clear interval when not running or time is up
+			if (intervalRef.current) {
+				clearInterval(intervalRef.current);
+				intervalRef.current = null;
+			}
 		}
 
 		return () => {
-			if (intervalRef.current) clearInterval(intervalRef.current);
+			if (intervalRef.current) {
+				clearInterval(intervalRef.current);
+			}
 		};
-	}, [time, setTime, isTimeRunning, setisTimeRunning]);
+	}, [timerState, time]);
+
+	// Handle timer completion
+	React.useEffect(() => {
+		if (timerState === "finished") {
+			alert("Time is up!");
+			resetSession();
+		}
+	}, [timerState]);
 
 	const handleIncrement = () => {
-		setTime((prev) => prev + 5);
+		if (timerState === "idle") {
+			setTime((prev) => prev + 5);
+		}
 	};
 
 	const handleDecrement = () => {
-		if (time > 5) {
+		if (timerState === "idle" && time > 5) {
 			setTime((prev) => prev - 5);
 		}
 	};
 
-	const toggleTimer = () => {
-		setisTimeRunning(!isTimeRunning);
+	const startSession = () => {
+		setTimerState("running");
 	};
 
-	const toggleSession = () => {
-		setIsSessionStarted(!isSessionStarted);
-		setisTimeRunning(!isTimeRunning);
+	const pauseTimer = () => {
+		setTimerState("paused");
+	};
+
+	const resumeTimer = () => {
+		setTimerState("running");
 	};
 
 	const resetSession = () => {
-		setIsSessionStarted(false);
-		setisTimeRunning(false);
+		setTimerState("idle");
 		setTime(initialTime);
 	};
+
+	const isSessionStarted = timerState !== "idle";
+	const isTimeRunning = timerState === "running";
 
 	return (
 		<div className="p-24 rounded-xl border-1 bg-white/1 border-white/10 flex flex-col justify-center items-center">
@@ -64,38 +92,34 @@ export default function Testing2() {
 
 			<h2 className="font-semibold text-3xl mb-8">time: {time}</h2>
 			<div className="flex gap-3 flex-col">
-				{/* Start sessions */}
-				<button
-					hidden={isSessionStarted === true && isTimeRunning === true}
-					onClick={isSessionStarted ? resetSession : toggleSession}
-				>
-					start session
-				</button>
+				{/* Start session */}
+				{timerState === "idle" && (
+					<button onClick={startSession}>start session</button>
+				)}
 
-				{/* Reset sessions */}
-				<button
-					hidden={isSessionStarted === false && isTimeRunning === false}
-					onClick={resetSession}
-				>
-					end session
-				</button>
+				{/* End session */}
+				{timerState === "paused" && (
+					<button onClick={resetSession}>end session</button>
+				)}
 
 				{/* Toggle timer */}
-				<button hidden={!isSessionStarted} onClick={toggleTimer} className="">
-					{isTimeRunning ? "pause" : "resume"}
-				</button>
+				{isSessionStarted && time > 0 && (
+					<button onClick={isTimeRunning ? pauseTimer : resumeTimer}>
+						{isTimeRunning ? "pause" : "resume"}
+					</button>
+				)}
 
-				<div hidden={time > 0}>
-					<button onClick={() => setTime(5)}>restart</button>
-				</div>
-				<div hidden={isSessionStarted} className="flex gap-3">
-					<button onClick={handleIncrement}>
-						<Plus />
-					</button>
-					<button onClick={handleDecrement}>
-						<Minus />
-					</button>
-				</div>
+				{/* Time adjustment controls */}
+				{timerState === "idle" && (
+					<div className="flex gap-3">
+						<button onClick={handleIncrement}>
+							<Plus />
+						</button>
+						<button onClick={handleDecrement}>
+							<Minus />
+						</button>
+					</div>
+				)}
 			</div>
 		</div>
 	);
