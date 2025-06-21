@@ -42,3 +42,7 @@
 .read-the-docs {
 	color: #888;
 }
+
+input {
+	@apply border-1 rounded-lg border-white/10 p-3 text-lg;
+}
