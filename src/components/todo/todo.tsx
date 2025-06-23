@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { supabase } from "../../lib/supabase";
+import { Target, X } from "lucide-react";
 
 interface Task {
 	id: number;
@@ -13,19 +14,22 @@ export default function Todo() {
 	const [newTask, setNewTask] = React.useState({ title: "", description: "" });
 	const [tasks, setTasks] = React.useState<Task[]>([]);
 
+	const [newDescription, setNewDescription] = React.useState();
+	const [newTitle, setNewTitle] = React.useState();
+
 	React.useEffect(() => {
 		const fetchTasks = async () => {
 			const { data, error } = await supabase
 				.from("tasks")
 				.select("*")
 				.order("created_at", { ascending: true });
-			if (error) console.error("An error has occur:", error);
+			if (error) console.error("An error has occur:", error.message);
 
 			setTasks(data);
 		};
 
 		fetchTasks();
-	}, []);
+	}, [tasks]);
 
 	const handleSubmit = async (e: any) => {
 		e.preventDefault();
@@ -34,11 +38,9 @@ export default function Todo() {
 		}
 		const { error } = await supabase.from("tasks").insert(newTask).single();
 		console.log("inserting data:", newTask);
-
 		setNewTask({ title: "", description: "" });
-
 		if (error) {
-			console.error("An error has occur during insertion:", error);
+			console.error("An error has occur during insertion:", error.message);
 			return;
 		} else {
 			console.log("Insertion completed");
@@ -46,11 +48,24 @@ export default function Todo() {
 		}
 	};
 
-	// const handleEdit = async () => {};
+	const handleEditDescription = async (id: number) => {
+		const { error } = await supabase
+			.from("tasks")
+			.update({ description: newDescription })
+			.eq("id", id);
 
-	// const handleDelete = async (task: Task) => {
-	// 	const { data, error } = await supabase.from("tasks").delete;
-	// };
+		if (error) console.error("An error has occur in delete task");
+		setNewDescription("");
+		return;
+	};
+
+	const handleDelete = async (id: number) => {
+		const { error } = await supabase.from("tasks").delete().eq("id", id);
+
+		if (error)
+			console.error("An error has occur in deleting task", error.message);
+		return;
+	};
 
 	return (
 		<div className="flex gap-5">
@@ -65,6 +80,7 @@ export default function Todo() {
 							name="title"
 							type="text"
 							placeholder="Current Task"
+							value={newTask.title}
 						/>
 						<input
 							onChange={(e) =>
@@ -73,6 +89,7 @@ export default function Todo() {
 							name="description"
 							type="text"
 							placeholder="Description"
+							value={newTask.description}
 						/>
 					</div>
 					<button className="w-full mt-3" onClick={() => console.log(newTask)}>
@@ -89,12 +106,22 @@ export default function Todo() {
 					<div
 						key={index}
 						className="flex flex-col gap-2 justify-start items-start p-3 mb-2 rounded-lg border-1 border-white/10 bg-white/5"
-						onClick={() => {
-							console.log("current task", task);
-						}}
 					>
 						<span>{task.title}</span>
 						<p className="text-white/50">{task.description}</p>
+						<div>
+							<input
+								type="text"
+								placeholder="edit description"
+								onChange={(e) => setNewDescription(e.target.value)}
+							/>
+							<button onClick={() => handleEditDescription(task.id)}>
+								edit
+							</button>
+						</div>
+						<button onClick={() => handleDelete(task.id)}>
+							<X />
+						</button>
 					</div>
 				))}
 			</div>
