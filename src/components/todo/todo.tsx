@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { supabase } from "../../lib/supabase";
-import { Target, X } from "lucide-react";
+import { X } from "lucide-react";
+import type { Session } from "@supabase/supabase-js";
 
 interface Task {
 	id: number;
@@ -10,12 +11,12 @@ interface Task {
 	created_at: string;
 }
 
-export default function Todo() {
+export default function Todo({ session }: { session: Session }) {
 	const [newTask, setNewTask] = React.useState({ title: "", description: "" });
 	const [tasks, setTasks] = React.useState<Task[]>([]);
 
-	const [newDescription, setNewDescription] = React.useState();
-	const [newTitle, setNewTitle] = React.useState();
+	const [newDescription, setNewDescription] = React.useState<string>();
+	// const [newTitle, setNewTitle] = React.useState();
 
 	React.useEffect(() => {
 		const fetchTasks = async () => {
@@ -27,18 +28,50 @@ export default function Todo() {
 
 			setTasks(data);
 		};
-
 		fetchTasks();
 	}, [tasks]);
 
+	React.useEffect(() => {
+		const channel = supabase.channel("tasks-channel");
+		channel
+			.on(
+				"postgres_changes", // What to listen for
+				{
+					event: "INSERT", // What type of change
+					schema: "public", // Which part of the database
+					table: "tasks", // Which table
+				},
+				(payload) => {
+					// What to do when it happens
+					const newTask = payload.new as Task;
+					setTasks((prev) => [...prev, newTask]);
+				}
+			)
+			.subscribe((status) => console.log("Subscription:", status));
+
+		// Cleanup function
+		return () => {
+			supabase.removeChannel(channel);
+		};
+	}, []);
+
 	const handleSubmit = async (e: any) => {
 		e.preventDefault();
+
 		if (newTask.title === "" && newTask.description === "") {
 			alert("Task cannot be empty");
 		}
-		const { error } = await supabase.from("tasks").insert(newTask).single();
-		console.log("inserting data:", newTask);
+		const { error, data } = await supabase
+			.from("tasks")
+			.insert({ ...newTask, email: session.user.email })
+			.select()
+			.single();
+
+		console.log("inserting data:", data);
+
+		setTasks((prev) => [...prev, data]);
 		setNewTask({ title: "", description: "" });
+
 		if (error) {
 			console.error("An error has occur during insertion:", error.message);
 			return;
