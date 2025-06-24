@@ -14,26 +14,39 @@ interface Task {
 export default function Todo({ session }: { session: Session }) {
 	const [newTask, setNewTask] = React.useState({ title: "", description: "" });
 	const [tasks, setTasks] = React.useState<Task[]>([]);
+	const [error, setError] = React.useState<string | null>(null);
+	const [loading, setLoading] = React.useState(false);
 
 	const [newDescription, setNewDescription] = React.useState<string>();
-	// const [newTitle, setNewTitle] = React.useState();
 
+	// Fetching data in initial render
 	React.useEffect(() => {
 		const fetchTasks = async () => {
+			setLoading(true);
+			setError(null);
+
 			const { data, error } = await supabase
 				.from("tasks")
 				.select("*")
 				.order("created_at", { ascending: true });
-			if (error) console.error("An error has occur:", error.message);
 
-			setTasks(data);
+			if (error) {
+				setError(error.message);
+				console.error("An error has occur:", error.message);
+			} else {
+				setTasks(data || []);
+			}
+
+			setLoading(false);
 		};
 		fetchTasks();
-	}, [tasks]);
+	}, []);
 
+	// Handle subscription
 	React.useEffect(() => {
 		const channel = supabase.channel("tasks-channel");
-		channel
+
+		const subscription = channel
 			.on(
 				"postgres_changes", // What to listen for
 				{
@@ -47,36 +60,50 @@ export default function Todo({ session }: { session: Session }) {
 					setTasks((prev) => [...prev, newTask]);
 				}
 			)
+			.on(
+				"postgres_changes",
+				{
+					event: "DELETE",
+					schema: "public",
+					table: "tasks",
+				},
+				(payload) => {
+					console.log("Task deleted:", payload);
+					const deletedTask = payload.old as Task;
+					setTasks((prev) => prev.filter((task) => task.id !== deletedTask.id));
+				}
+			)
 			.subscribe((status) => console.log("Subscription:", status));
 
-		// Cleanup function
 		return () => {
-			supabase.removeChannel(channel);
+			subscription.unsubscribe();
 		};
 	}, []);
 
 	const handleSubmit = async (e: any) => {
 		e.preventDefault();
 
+		// Validating if form is not empty
 		if (newTask.title === "" && newTask.description === "") {
 			alert("Task cannot be empty");
+			return;
 		}
-		const { error, data } = await supabase
+
+		const { error } = await supabase
 			.from("tasks")
 			.insert({ ...newTask, email: session.user.email })
 			.select()
 			.single();
 
-		console.log("inserting data:", data);
-
-		setTasks((prev) => [...prev, data]);
-		setNewTask({ title: "", description: "" });
+		console.log("inserting data:", newTask);
 
 		if (error) {
 			console.error("An error has occur during insertion:", error.message);
 			return;
 		} else {
 			console.log("Insertion completed");
+
+			setNewTask({ title: "", description: "" });
 			return;
 		}
 	};
