@@ -1,10 +1,10 @@
 import "./App.css";
-import TestingDnd from "./components/testing-dnd";
+import PragmaticDnd from "./components/pragmatic-dnd/pragmatic-dnd";
 
 function App() {
 	return (
 		<div className="flex flex-col gap-6">
-			<TestingDnd />
+			<PragmaticDnd />
 		</div>
 	);
 }

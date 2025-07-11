@@ -8,7 +8,7 @@ import {
 	type DragStartEvent,
 	DragOverlay,
 } from "@dnd-kit/core";
-import type { Box } from "./types";
+import type { Box } from "../types";
 import Draggable from "./draggable";
 import { arrayMove, SortableContext } from "@dnd-kit/sortable";
 
