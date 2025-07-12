@@ -1,8 +1,15 @@
-export interface Box {
-	number: number;
-	id: string;
+export interface ListItemProps {
+	item: Item;
+	index: number;
+	onDrop: (fromIndex: number, toIndex: number) => void;
 }
 
-export interface BoxProps {
-	box: Box;
+export interface Item {
+	id: string;
+	content: string;
+}
+
+export interface DragData {
+	id: string;
+	index: number;
 }

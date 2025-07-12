@@ -1,9 +1,8 @@
-import "./App.css";
-import PragmaticDnd from "./components/pragmatic-dnd/pragmatic-dnd";
+import PragmaticDnd from "./components/pragmatic-dnd";
 
 function App() {
 	return (
-		<div className="flex flex-col gap-6">
+		<div className="flex justify-center items-center w-full min-h-screen text-white bg-slate-950">
 			<PragmaticDnd />
 		</div>
 	);
