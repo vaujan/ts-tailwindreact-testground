@@ -1,4 +1,4 @@
-import PragmaticDnd from "./components/pragmatic-dnd";
+import PragmaticDnd from "./components/pragmatic-dnd/pragmatic-dnd";
 
 function App() {
 	return (
