@@ -1,6 +1,6 @@
 import "./App.css";
 // import PragmaticDnd from "./components/pragmatic-dnd/pragmatic-dnd";
-import Kanban from "./components/pragmatic-dnd/kanban";
+import Kanban from "./components/todo/pragmatic-dnd/kanban";
 
 function App() {
 	return (
