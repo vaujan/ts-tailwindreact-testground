@@ -11,6 +11,15 @@ export interface Column {
 	title: string;
 }
 
+export interface ColumnProps {
+	column: Column;
+	onCardMove: (
+		cardId: string,
+		fromColumnId: string,
+		toColumnId: string
+	) => void;
+}
+
 export interface Board {
 	id: string;
 	columns: Column[];

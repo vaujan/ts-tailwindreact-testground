@@ -50,10 +50,10 @@ export default function Card({ card }: { card: CardType }) {
 					return { ...card };
 				},
 				onDrag({ source, self }) {
-					console.log("ondrag:", source.data.id, self.data.id);
+					// console.log("ondrag:", source.data.id, self.data.id);
 				},
 				onDrop({ source, self }) {
-					console.log("ondrop:", source.data.id, self.data.id);
+					// console.log("ondrop:", source.data.id, self.data.id);
 				},
 			})
 		);
