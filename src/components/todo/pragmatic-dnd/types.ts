@@ -4,6 +4,15 @@ export interface Card {
 	description: string;
 }
 
+export interface CardProps {
+	card: Card;
+	onCardInsert: (
+		cardId: string,
+		targetCardId: string,
+		position: "above" | "below"
+	) => void;
+}
+
 export interface Column {
 	id: string;
 	boardId: Board["id"];
@@ -18,6 +27,11 @@ export interface ColumnProps {
 		fromColumnId: string,
 		toColumnId: string
 	) => void;
+	onCardInsert: (
+		cardId: string,
+		targetCardId: string,
+		position: "above" | "below"
+	) => void;
 }
 
 export interface Board {
@@ -25,3 +39,10 @@ export interface Board {
 	columns: Column[];
 	title: string;
 }
+
+export type DragData = {
+	type: "card";
+	id: string;
+	columnId: string;
+	description: string;
+};

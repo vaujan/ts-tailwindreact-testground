@@ -1,5 +1,9 @@
 import React from "react";
-import { type Column as ColumnType } from "./types";
+import {
+	type ColumnProps,
+	type Column as ColumnType,
+	type Card as CardType,
+} from "./types";
 import { v4 as uuidv4 } from "uuid";
 import Column from "./column";
 
@@ -89,20 +93,62 @@ export default function Board() {
 		[]
 	);
 
-	// const handleCardMove2 = React.useCallback(({ fromCardId, toCardId }) => {
-	// 	setColumns((prevColumns) => {
-	// 		const newColumns = [...prevColumns];
+	// TODO: Complete implementation
+	const handleCardInsert = React.useCallback(
+		(cardId: string, targetCardId: string, position: "above" | "below") => {
+			setColumns((prevColumns) => {
+				//create new array for immutability
+				const newColumns = [...prevColumns];
 
-	// 		const fromCardIndex = newColumns.findIndex((col) =>
-	// 			col.cards.some((card) => card.id === fromCardId)
-	// 		);
+				// index -1 meaning not found
+				// Step 1: find the sources: card, columnindex and cardindex
+				let sourceCard: CardType | null = null;
+				let sourceColumnIndex = -1;
+				let sourceCardIndex = -1;
 
-	// 		const toCardIndex = newColumns.findIndex((col) =>
-	// 			col.cards.some((card) => card.id === toCardId)
-	// 		);
-	// 	});
-	// }, []);
+				for (let i = 0; i < newColumns.length; i++) {
+					// for every card in the columns, find the card index by checking if
+					// the column[i].cards.(card.id) is the same with the param cardId
+					const cardIndex = newColumns[i].cards.findIndex(
+						(card) => card.id === cardId
+					);
 
+					// if the cardIndex is other than -1 (meaning we found them)
+					// then assign the value as the source card
+					if (cardIndex !== -1) {
+						sourceCard = newColumns[i].cards[cardIndex];
+						sourceColumnIndex = i;
+						sourceCardIndex = cardIndex;
+						break;
+					}
+				}
+
+				if (!sourceCard || sourceColumnIndex === -1) return prevColumns;
+
+				// step 2: find the target
+				let targetColumnIndex = -1;
+				let targetCardIndex = -1;
+
+				for (let i = 0; i < newColumns.length; i++) {
+					const cardIndex = newColumns[i].cards.findIndex(
+						(card) => card.id === targetCardId
+					);
+
+					if (cardIndex !== -1) {
+						targetColumnIndex = i;
+						targetCardIndex = cardIndex;
+						break;
+					}
+				}
+
+				if (targetColumnIndex === -1) return prevColumns;
+
+				//in the source column, remove 1 item from cards[sourceIndex]
+				newColumns[sourceColumnIndex].cards.splice(sourceCardIndex, 1);
+			});
+		},
+		[]
+	);
 	return (
 		<div className="flex  flex-col gap-8 md:py-32 px-8 py-12">
 			<h1 className="text-3xl font-semibold text-gray-200p">My board</h1>
@@ -110,7 +156,12 @@ export default function Board() {
 			<div className="flex gap-3 overflow-x-auto">
 				{/* Column */}
 				{columns.map((column) => (
-					<Column onCardMove={handleCardMove} key={column.id} column={column} />
+					<Column
+						onCardInsert={handleCardInsert}
+						onCardMove={handleCardMove}
+						key={column.id}
+						column={column}
+					/>
 					// <Card key={card.id} card={card} />
 				))}
 			</div>

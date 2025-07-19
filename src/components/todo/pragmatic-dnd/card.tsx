@@ -1,5 +1,5 @@
 import React from "react";
-import { type Card as CardType } from "./types";
+import { type Card as CardType, type CardProps } from "./types";
 import {
 	draggable,
 	dropTargetForElements,
@@ -8,23 +8,25 @@ import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/el
 import { createPortal } from "react-dom";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 
-export default function Card({ card }: { card: CardType }) {
+export default function Card({ card, onCardInsert }: CardProps) {
 	const { description, id, columnId } = card;
 	const [isDragging, setIsDragging] = React.useState<boolean>(false);
 	const [preview, setPreview] = React.useState<HTMLElement | null>(null);
+	const [dropPosition, setDropPosition] = React.useState<
+		"above" | "below" | null
+	>(null);
 	const ref = React.useRef(null);
 
 	React.useEffect(() => {
 		const element = ref.current;
 		if (!element) return;
 
-		const cleanup =
-			// Dragging operation
+		const cleanup = combine(
 			draggable({
 				element,
 				getInitialData() {
 					// Return an object to satisfy the expected type
-					return { ...card };
+					return { type: "card", ...card };
 				},
 				onDragStart() {
 					setIsDragging(true);
@@ -41,24 +43,49 @@ export default function Card({ card }: { card: CardType }) {
 						},
 					});
 				},
-			});
+			}),
 
-		// Dropping operation, wrap this in combine() with the draggable() above. => combine(draggable, dropTargetForElement)
-		// dropTargetForElements({
-		// 	element,
-		// 	getData() {
-		// 		return { ...card };
-		// 	},
-		// 	onDrag({ source, self }) {
-		// 		console.log("ondrag:", source.data.id, self.data.id);
-		// 	},
-		// 	onDrop({ source, self }) {
-		// 		console.log("ondrop:", source.data.id, self.data.id);
-		// 	},
-		// })
+			dropTargetForElements({
+				element,
+				getData() {
+					return { type: "card", ...card };
+				},
+				canDrop({ source }) {
+					// if the type is card and not in the same place (same id), can drop
+					return source.data.type === "card" && source.data.id !== card.id;
+				},
+				onDrag({ source, self, location }) {
+					console.log("source", source);
+					console.log("self", self);
+					console.log("location", location);
+
+					const target = self.element;
+					const targetRect = target.getBoundingClientRect();
+					const clientY = location.current.input.clientY;
+
+					// calculate if we're in bottom half or top half
+					const midpoint = targetRect.top + targetRect.bottom / 2;
+
+					//if midpoint is higher than current client Y coordinate, then we're on top dropping position
+					const position = clientY < midpoint ? "above" : "below";
+					setDropPosition(position);
+				},
+				onDragLeave() {
+					setDropPosition(null);
+				},
+				onDrop({ source, self }) {
+					if (source.data.type === "card" && dropPosition) {
+						// (cardId, targetId, position)
+						onCardInsert(source.data.id as string, id, dropPosition);
+					}
+
+					setDropPosition(null);
+				},
+			})
+		);
 
 		return cleanup;
-	}, []);
+	}, [id, columnId, description, onCardInsert, dropPosition]);
 
 	return (
 		<div
