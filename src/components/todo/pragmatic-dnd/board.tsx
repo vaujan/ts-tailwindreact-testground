@@ -88,6 +88,21 @@ export default function Board() {
 		},
 		[]
 	);
+
+	// const handleCardMove2 = React.useCallback(({ fromCardId, toCardId }) => {
+	// 	setColumns((prevColumns) => {
+	// 		const newColumns = [...prevColumns];
+
+	// 		const fromCardIndex = newColumns.findIndex((col) =>
+	// 			col.cards.some((card) => card.id === fromCardId)
+	// 		);
+
+	// 		const toCardIndex = newColumns.findIndex((col) =>
+	// 			col.cards.some((card) => card.id === toCardId)
+	// 		);
+	// 	});
+	// }, []);
+
 	return (
 		<div className="flex  flex-col gap-8 md:py-32 px-8 py-12">
 			<h1 className="text-3xl font-semibold text-gray-200p">My board</h1>

@@ -18,7 +18,7 @@ export default function Card({ card }: { card: CardType }) {
 		const element = ref.current;
 		if (!element) return;
 
-		const cleanup = combine(
+		const cleanup =
 			// Dragging operation
 			draggable({
 				element,
@@ -41,25 +41,25 @@ export default function Card({ card }: { card: CardType }) {
 						},
 					});
 				},
-			}),
+			});
 
-			// Dropping operation
-			dropTargetForElements({
-				element,
-				getData() {
-					return { ...card };
-				},
-				onDrag({ source, self }) {
-					// console.log("ondrag:", source.data.id, self.data.id);
-				},
-				onDrop({ source, self }) {
-					// console.log("ondrop:", source.data.id, self.data.id);
-				},
-			})
-		);
+		// Dropping operation, wrap this in combine() with the draggable() above. => combine(draggable, dropTargetForElement)
+		// dropTargetForElements({
+		// 	element,
+		// 	getData() {
+		// 		return { ...card };
+		// 	},
+		// 	onDrag({ source, self }) {
+		// 		console.log("ondrag:", source.data.id, self.data.id);
+		// 	},
+		// 	onDrop({ source, self }) {
+		// 		console.log("ondrop:", source.data.id, self.data.id);
+		// 	},
+		// })
 
 		return cleanup;
 	}, []);
+
 	return (
 		<div
 			ref={ref}
@@ -85,7 +85,7 @@ function CardPreview({ card }: { card: CardType }) {
 	const { id, description, columnId } = card;
 
 	return (
-		<div className="w-[350px]">
+		<div className="w-[350px] ">
 			<div className="bg-white/10 flex rotate-10 flex-col gap-2 rounded-md p-3 transition-all ease-out cursor-grab">
 				<div className="flex gap-2">
 					{" "}

@@ -32,6 +32,7 @@ export default function Column({ column, onCardMove }: ColumnProps) {
 					source.data.columnId as string,
 					self.data.id as string
 				);
+				setIsOver(false);
 				// console.log("source", source);
 				// console.log("self", self);
 				// console.log("location", location);
@@ -46,7 +47,7 @@ export default function Column({ column, onCardMove }: ColumnProps) {
 			ref={ref}
 			className={`p-3 rounded-lg ${
 				isOver ? "bg-stone-500/20" : "bg-black/20"
-			} flex transition-all ease-out flex-col gap-5 `}
+			} flex h-fit min-h-[120px] transition-all ease-out flex-col gap-5 `}
 		>
 			<div
 				className="w-[350px] flex justify-between"
@@ -69,6 +70,11 @@ export default function Column({ column, onCardMove }: ColumnProps) {
 					</button>
 				</div>
 			</div>
+			{cards.length === 0 && (
+				<div className="flex justify-center items-center font-medium p-3 border-2 border-dashed rounded-lg opacity-10">
+					No task here.
+				</div>
+			)}
 			{cards.map((card) => (
 				<Card key={card.id} card={card} />
 			))}
